@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: haproxyconfig
+  namespace: test-rui
+data:
+  haproxy.cfg: |
+    global
+    log stdout format raw local0 debug
+
+    defaults
+      mode tcp
+      timeout client 10s
+      timeout connect 5s
+      timeout server 10s
+
+    frontend myfrontend
+      bind *:5432
+      default_backend postgres
+      mode tcp
+      log global
+      option tcplog
+
+
+    backend postgres
+      mode tcp
+      default-server port 9200
+      option tcp-check
+      tcp-check expect string master\ is\ running
+      server <name> <hostname1>:5432 check
+      server <name> <hostname2>:5432 check
