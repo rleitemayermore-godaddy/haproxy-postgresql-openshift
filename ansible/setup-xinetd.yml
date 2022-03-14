@@ -1,0 +1,36 @@
+---
+- name: Setup xinetd
+  hosts: all
+  become: true
+  remote_user: root
+  vars_files:
+    - vars/stg.yml
+  tasks:
+      - name: install packages
+        yum:
+          name: xinetd
+          state: installed
+
+      - name: copy script template
+        template:
+          src: files/pgcheck.sh.j2
+          dest: /opt/pgcheck.sh
+          owner: root
+          mode: 0700
+
+      - name: copy xinetd service definition
+        copy:
+          src: files/pgcheck
+          dest: /etc/xinetd.d/pgcheck
+
+      - name: start and enable services
+        service:
+          name: xinetd
+          state: started
+          enabled: true
+
+      - name: Allow traffic on port 9200 TCP
+        ansible.posix.firewalld:
+          port: 9200/tcp
+          permanent: yes
+          state: enabled
